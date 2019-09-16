@@ -12,17 +12,22 @@ class Gadgets():
         self.signatures = [
             RET, SYSCALL
         ]
-        self.filters = [
+        self.jump_filters = [
             JUMP_RET, JUMP_SYS
         ]
+        if mode == "ctf":
+            self.filters = [
+                JUMP_CALL
+            ]
         if mode == "full":
             self.signatures.extend([
                 CALL_RAX, CALL_RBP, CALL_RBX, CALL_RCX, CALL_RDI, CALL_RDX, CALL_RSI, CALL_RSP,
                 CALL_R8, CALL_R9, CALL_R10, CALL_R11, CALL_R12, CALL_R13, CALL_R14, CALL_R15
             ])
-            self.filters.extend([
+            self.jump_filters.extend([
                 JUMP_CALL
             ])
+            self.filters = []
 
     def load_file(self, path):
         with open(path, "rb") as file:
@@ -70,7 +75,7 @@ class Gadgets():
             instructions = pydis.decode(gadget, pointer)
             for instruction in instructions:
                 gadgets.append(str(instruction))
-            if len(gadgets) > 0 and any(gadgets[-1].startswith(jump_filter) for jump_filter in self.filters):
+            if len(gadgets) > 0 and any(gadgets[-1].startswith(jump_filter) for jump_filter in self.jump_filters) and any(not_allowed not in ";".join(gadgets) for not_allowed in self.filters):
                 cleaned.append((gadget, pointer))
         self.gadgets = cleaned
         self.remove_duplicates()
