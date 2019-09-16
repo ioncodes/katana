@@ -1,3 +1,7 @@
+JUMP_RET  = "ret"
+JUMP_SYS  = "syscall"
+JUMP_CALL = "call"
+
 RET      = [0xc3]
 SYSCALL  = [0x0f, 0x05]
 

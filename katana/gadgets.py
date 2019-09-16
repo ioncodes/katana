@@ -5,15 +5,24 @@ import threading
 import concurrent.futures
 
 class Gadgets():
-    def __init__(self):
+    def __init__(self, mode="ctf"):
         self.bytes = []
         self.gadgets = []
         self.is_x64 = True
         self.signatures = [
-            RET, SYSCALL,
-            CALL_RAX, CALL_RBP, CALL_RBX, CALL_RCX, CALL_RDI, CALL_RDX, CALL_RSI, CALL_RSP,
-            CALL_R8, CALL_R9, CALL_R10, CALL_R11, CALL_R12, CALL_R13, CALL_R14, CALL_R15
+            RET, SYSCALL
         ]
+        self.filters = [
+            JUMP_RET, JUMP_SYS
+        ]
+        if mode == "full":
+            self.signatures.extend([
+                CALL_RAX, CALL_RBP, CALL_RBX, CALL_RCX, CALL_RDI, CALL_RDX, CALL_RSI, CALL_RSP,
+                CALL_R8, CALL_R9, CALL_R10, CALL_R11, CALL_R12, CALL_R13, CALL_R14, CALL_R15
+            ])
+            self.filters.extend([
+                JUMP_CALL
+            ])
 
     def load_file(self, path):
         with open(path, "rb") as file:
@@ -61,7 +70,7 @@ class Gadgets():
             instructions = pydis.decode(gadget, pointer)
             for instruction in instructions:
                 gadgets.append(str(instruction))
-            if len(gadgets) > 0 and (gadgets[-1].startswith("ret") or gadgets[-1].startswith("syscall") or gadgets[-1].startswith("call")):
+            if len(gadgets) > 0 and any(gadgets[-1].startswith(jump_filter) for jump_filter in self.filters):
                 cleaned.append((gadget, pointer))
         self.gadgets = cleaned
         self.remove_duplicates()
