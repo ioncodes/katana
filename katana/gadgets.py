@@ -12,11 +12,11 @@ class Gadgets():
             self.bytes = file.read()
         self.is_x64 = utils.is_x64(path)
     
-    def resolve(self, addr):
+    def resolve(self, addr, depth):
         _gadgets = []
         for i in range(0, 100):
             if addr - i <= 0: break
-            if len(_gadgets) >= 6: break
+            if len(_gadgets) >= depth: break
             pointer = utils.get_base_address() + addr - i
             _bytes = self.bytes[addr - i:addr + 1]
             try:
@@ -27,10 +27,32 @@ class Gadgets():
                 pass
         self.gadgets.extend(_gadgets)
     
-    def find_all(self):
+    def match_jump(self, addr, depth):
+        if self.bytes[addr - 1] != 0x00 and self.bytes[addr - 1] != 0x30 and self.bytes[addr] == 0xc3: # ret
+            self.resolve(addr, depth)
+        elif self.bytes[addr] == 0x0f and self.bytes[addr + 1] == 0x05: # syscall
+            self.resolve(addr + 1, depth)
+    
+    def find_all(self, depth=6):
+        self.gadgets = []
         for i in range(0, len(self.bytes)):
-            if self.bytes[i] == 0xc3:
-                self.resolve(i)
+            self.match_jump(i, depth=depth)
+        self.clean()
+    
+    def clean(self):
+        cleaned = []
+        for (gadget, pointer) in self.gadgets:
+            gadgets = []
+            instructions = pydis.decode(gadget, pointer)
+            for instruction in instructions:
+                gadgets.append(str(instruction))
+            if len(gadgets) > 0 and (gadgets[-1].startswith("ret") or gadgets[-1].startswith("syscall")):
+                cleaned.append((gadget, pointer))
+        self.remove_duplicates()
+        self.gadgets = cleaned
+    
+    def remove_duplicates(self):
+        self.gadgets = list(map(list, dict(self.gadgets).items()))
 
     def __str__(self):
         text = ""
@@ -42,3 +64,6 @@ class Gadgets():
             if len(gadgets) > 0:
                 text += "0x%x: %s;\n" % (pointer, "; ".join(gadgets))
         return text.strip()
+    
+    def __len__(self):
+        return len(self.gadgets)
