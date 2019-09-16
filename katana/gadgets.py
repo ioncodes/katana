@@ -48,11 +48,22 @@ class Gadgets():
                 gadgets.append(str(instruction))
             if len(gadgets) > 0 and (gadgets[-1].startswith("ret") or gadgets[-1].startswith("syscall")):
                 cleaned.append((gadget, pointer))
-        self.remove_duplicates()
         self.gadgets = cleaned
+        self.remove_duplicates()
     
     def remove_duplicates(self):
-        self.gadgets = list(map(list, dict(self.gadgets).items()))
+        gadgets_str = []
+        cleaned = []
+        for gadget, pointer in self.gadgets:
+            gadgets = []
+            instructions = pydis.decode(gadget, pointer)
+            for instruction in instructions:
+                gadgets.append(str(instruction))
+            gadget_str = ";".join(gadgets)
+            if gadget_str not in gadgets_str:
+                cleaned.append((gadget, pointer))
+                gadgets_str.append(gadget_str)
+        self.gadgets = cleaned
 
     def __str__(self):
         text = ""
