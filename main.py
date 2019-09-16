@@ -1,4 +1,4 @@
-from gadgets import Gadgets
+from katana.gadgets import Gadgets
 import sys
 
 if __name__ == "__main__":
