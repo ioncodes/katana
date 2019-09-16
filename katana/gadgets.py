@@ -19,6 +19,7 @@ class Gadgets():
             self.filters = [
                 JUMP_CALL
             ]
+            self.filters.extend(FILTER_JUMPS)
         if mode == "full":
             self.signatures.extend([
                 CALL_RAX, CALL_RBP, CALL_RBX, CALL_RCX, CALL_RDI, CALL_RDX, CALL_RSI, CALL_RSP,
@@ -75,7 +76,7 @@ class Gadgets():
             instructions = pydis.decode(gadget, pointer)
             for instruction in instructions:
                 gadgets.append(str(instruction))
-            if len(gadgets) > 0 and any(gadgets[-1].startswith(jump_filter) for jump_filter in self.jump_filters) and any(not_allowed not in ";".join(gadgets) for not_allowed in self.filters):
+            if len(gadgets) > 0 and any(gadgets[-1].startswith(jump_filter) for jump_filter in self.jump_filters) and all(not_allowed not in ";".join(gadgets) for not_allowed in self.filters):
                 cleaned.append((gadget, pointer))
         self.gadgets = cleaned
         self.remove_duplicates()

@@ -2,6 +2,8 @@ JUMP_RET  = "ret"
 JUMP_SYS  = "syscall"
 JUMP_CALL = "call"
 
+FILTER_JUMPS = ["jno","jnbe","jmp","jne","je","jz","jnz","jno","loopne","jb","jo","jp"]
+
 RET      = [0xc3]
 SYSCALL  = [0x0f, 0x05]
 
