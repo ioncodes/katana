@@ -52,18 +52,8 @@ class Gadgets():
         self.remove_duplicates()
     
     def remove_duplicates(self):
-        gadgets_str = []
-        cleaned = []
-        for gadget, pointer in self.gadgets:
-            gadgets = []
-            instructions = pydis.decode(gadget, pointer)
-            for instruction in instructions:
-                gadgets.append(str(instruction))
-            gadget_str = ";".join(gadgets)
-            if gadget_str not in gadgets_str:
-                cleaned.append((gadget, pointer))
-                gadgets_str.append(gadget_str)
-        self.gadgets = cleaned
+        dupes = set()
+        self.gadgets = [(gadget, _) for gadget, _ in self.gadgets if not (gadget in dupes or dupes.add(gadget))] 
 
     def __str__(self):
         text = ""
@@ -73,7 +63,7 @@ class Gadgets():
             for instruction in instructions:
                 gadgets.append(str(instruction))
             if len(gadgets) > 0:
-                text += "0x%x: %s;\n" % (pointer, "; ".join(gadgets))
+                text += "0x%x: %s;\n" % (pointer, "; ".join(gadgets).lower())
         return text.strip()
     
     def __len__(self):
